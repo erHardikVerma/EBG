@@ -1,0 +1,80 @@
+# =================================================================
+# GLOBAL IGNORES (Applies to all sub-folders in EBG)
+# =================================================================
+
+# 1. Dependencies, Builds & Frameworks (THE HEAVY JUNK)
+node_modules/
+.next/
+out/
+build/
+dist/
+.npm/
+
+# 2. Python Environments & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+# 3. Environment Secrets (Security)
+.env
+.env.local
+.env.development
+.env.production
+
+# 4. OS Generated System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 5. Global Heavy Media Blocks (Uncomment to block these absolutely everywhere)
+# *.zip
+# *.tar.gz
+# *.mp4
+# *.exe
+
+
+# =================================================================
+# FOLDER-SPECIFIC RULES (For your manual refinement)
+# =================================================================
+
+# 01) D-Data Transformation
+# Block everything in this folder perfectly, EXCEPT the Readme and Framework docs
+/01) D-Data Transformation/*
+!/01) D-Data Transformation/Readme.md
+!/01) D-Data Transformation/Data Integration Framework.pdf
+!/01) D-Data Transformation/Data Integration Framework.gdoc
+
+# 02) S-Swap now clone
+# Additional Next.js specific ignores
+/02) S-Swap now clone/.vercel
+/02) S-Swap now clone/.eslintcache
+/02) S-Swap now clone/*.tsbuildinfo
+/02) S-Swap now clone/*.pem
+
+# 03) M-Dashboard(Excel to GoogleForms to FullApp)
+# Allow only .gform files here, block all else (including heavy xlsx files for now)
+/03) M-Dashboard(Excel to GoogleForms to FullApp)/*
+!/03) M-Dashboard(Excel to GoogleForms to FullApp)/*.gform
+
+# 03) Sample Tkinter App
+# Python cache and environments are already blocked globally above.
+
+# 04) S-Dashboard Tools
+# Block everything, allow only the AI Tools.pdf
+/04) S-Dashboard Tools/*
+!/04) S-Dashboard Tools/AI Tools.pdf
+
+# 05) M-AgeonDeck
+# Block everything, allow only the specific presentation, script, and text content
+/05) M-AgeonDeck/*
+!/05) M-AgeonDeck/ageon deck.pptx.pdf
+!/05) M-AgeonDeck/content.txt
+!/05) M-AgeonDeck/create_ageon_ppt.py
+
+# 06) M-Website Audit
+# Block everything, allow only the Wallpaper Shortlist PDF
+/06) M-Website Audit/*
+!/06) M-Website Audit/Wallpaper Shortlist .pdf

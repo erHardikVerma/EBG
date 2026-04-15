@@ -1,0 +1,1 @@
+.custom svg path{fill:var(--color, var(--apx-icon-secondary))}.custom-stroke svg path{stroke:var(--stroke-color, var(--apx-icon-secondary))}.svg-color svg{width:inherit;height:inherit}
