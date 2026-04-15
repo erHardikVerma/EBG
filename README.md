@@ -1,6 +1,6 @@
-# 🚀 Ever Bright Group (EBG) - Engineering Workspace
+# 🚀 EBG - Engineering Workspace
 
-Welcome to the central repository for Ever Bright Group's technical architecture, software development, and systems engineering. This workspace spans multi-tenant operations, automated reporting, full-stack Next.js interfaces, and data transformation protocols.
+Welcome to the central repository for EBGs technical architecture, software development, and systems engineering. This workspace spans multi-tenant operations, automated reporting, full-stack Next.js interfaces, and data transformation protocols.
 
 ---
 
