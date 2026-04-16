@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise IAM Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="data.js"></script>
+    <style>
+        /* Custom scrollbar for a sleeker look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans flex h-screen overflow-hidden text-slate-800">
+
+    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-20 shrink-0">
+        <div class="p-6 text-center border-b border-slate-800">
+            <h1 class="text-2xl font-black tracking-tight text-blue-500">EB<span class="text-white">G</span></h1>
+            <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Identity Matrix</p>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="w-full flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg transition font-medium text-sm shadow-md">
+                <svg class="w-5 h-5 mr-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Intelligence Overview
+            </button>
+            <button onclick="switchView('directory')" id="nav-directory" class="w-full flex items-center px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition font-medium text-sm">
+                <svg class="w-5 h-5 mr-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                User Directory
+            </button>
+            <button onclick="switchView('licenses')" id="nav-licenses" class="w-full flex items-center px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition font-medium text-sm">
+                <svg class="w-5 h-5 mr-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                License Directory
+            </button>
+        </nav>
+        <div class="p-4 bg-slate-950 text-xs text-slate-500 text-center border-t border-slate-800">
+            Live Database: <span id="sidebar-count" class="font-bold text-blue-400">0</span> records
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="bg-white shadow-sm border-b border-slate-200 z-10 p-4 shrink-0">
+            <div class="flex justify-between items-center mb-3">
+                <h2 id="view-title" class="text-2xl font-bold text-slate-800 tracking-tight">Intelligence Overview</h2>
+                <button onclick="resetFilters()" class="text-sm text-red-600 hover:text-red-800 font-semibold px-3 py-1 rounded-md hover:bg-red-50 transition hidden" id="resetFiltersBtn">
+                    Clear Active Filters ✕
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                <select id="filterCompany" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
+                    <option value="ALL">🏢 All Companies</option>
+                </select>
+                <select id="filterRegion" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
+                    <option value="ALL">🌍 All Regions</option>
+                </select>
+                <select id="filterDept" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
+                    <option value="ALL">📁 All Departments</option>
+                </select>
+                <select id="filterLicense" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
+                    <option value="ALL">🔑 All License Types</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="p-8 overflow-y-auto flex-1 bg-slate-50">
+            
+            <div id="view-dashboard" class="space-y-8 fade-in block">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div onclick="setKpiFilter('ALL')" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500 cursor-pointer hover:shadow-md hover:-translate-y-1 transition group">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-blue-500 transition">Total Filtered</p>
+                        <p class="text-4xl font-black text-slate-800 mt-2" id="kpi-total">0</p>
+                    </div>
+                    <div onclick="setKpiFilter('LICENSED')" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-emerald-500 cursor-pointer hover:shadow-md hover:-translate-y-1 transition group">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-emerald-500 transition">Licensed Users</p>
+                        <p class="text-4xl font-black text-slate-800 mt-2" id="kpi-licensed">0</p>
+                    </div>
+                    <div onclick="setKpiFilter('UNLICENSED')" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-rose-500 cursor-pointer hover:shadow-md hover:-translate-y-1 transition group">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-rose-500 transition">Unlicensed Users</p>
+                        <p class="text-4xl font-black text-slate-800 mt-2" id="kpi-unlicensed">0</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-indigo-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Unique Departments</p>
+                        <p class="text-4xl font-black text-slate-800 mt-2" id="kpi-depts">0</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">License Distribution</h3>
+                        <div class="relative h-72"><canvas id="licensePieChart"></canvas></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Top Departments by Headcount</h3>
+                        <div class="relative h-72"><canvas id="deptBarChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-directory" class="hidden space-y-6 fade-in">
+                <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 flex justify-between items-center sticky top-0 z-10">
+                    <div class="w-full md:w-1/2 relative">
+                        <svg class="w-5 h-5 absolute left-3 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" id="searchInput" placeholder="Deep search directory by name, UPN, cost center..." 
+                            class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-slate-700 transition">
+                    </div>
+                    <div class="hidden md:block text-sm font-semibold text-slate-500 bg-slate-100 px-4 py-2 rounded-lg" id="searchStats"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Identity</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Organization</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Location</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="bg-white divide-y divide-slate-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-licenses" class="hidden space-y-6 fade-in">
+                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl shadow-md p-8 text-white">
+                    <h2 class="text-3xl font-black">License Inventory Matrix</h2>
+                    <p class="text-blue-100 mt-2 text-lg">A consolidated view of every unique license sku active in the organization.</p>
+                </div>
+                <div id="licenseGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    </div>
+            </div>
+
+            <div id="view-profile" class="hidden fade-in">
+                <button onclick="switchView('directory')" class="mb-6 flex items-center text-slate-500 hover:text-slate-800 font-bold transition bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Directory
+                </button>
+
+                <div class="flex flex-col xl:flex-row gap-6">
+                    <div class="w-full xl:w-1/3 space-y-6">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="bg-slate-900 h-24 relative"></div>
+                            <div class="px-8 pb-8 relative">
+                                <div class="h-24 w-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-4xl font-black shadow-lg absolute -top-12 border-4 border-white">
+                                    <span id="prof-initials">JS</span>
+                                </div>
+                                <div class="mt-14">
+                                    <h2 class="text-2xl font-black text-slate-800" id="prof-name">John Smith</h2>
+                                    <p class="text-slate-500 font-medium" id="prof-upn">jsmith@company.com</p>
+                                    <div class="mt-6 space-y-4">
+                                        <div class="flex items-center text-sm">
+                                            <span class="w-24 text-slate-400 font-bold uppercase tracking-wider text-xs">Company</span>
+                                            <span class="font-semibold text-slate-800" id="prof-company">OSI</span>
+                                        </div>
+                                        <div class="flex items-center text-sm">
+                                            <span class="w-24 text-slate-400 font-bold uppercase tracking-wider text-xs">Department</span>
+                                            <span class="font-semibold text-slate-800 bg-slate-100 px-3 py-1 rounded-md" id="prof-dept">IT</span>
+                                        </div>
+                                        <div class="flex items-center text-sm">
+                                            <span class="w-24 text-slate-400 font-bold uppercase tracking-wider text-xs">Region</span>
+                                            <span class="font-semibold text-slate-800" id="prof-region">CA</span>
+                                        </div>
+                                        <div class="flex items-center text-sm">
+                                            <span class="w-24 text-slate-400 font-bold uppercase tracking-wider text-xs">Cost Center</span>
+                                            <span class="font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold" id="prof-cost">12345</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full xl:w-2/3">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col">
+                            <div class="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800">License Assignment & Audit</h3>
+                                    <p class="text-sm text-slate-500">Financial tracking and lifecycle management</p>
+                                </div>
+                                <span id="prof-lic-count" class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm">0 Active</span>
+                            </div>
+                            <div class="overflow-x-auto flex-1 p-6">
+                                <table class="min-w-full divide-y divide-slate-200 border border-slate-200 rounded-lg hidden" id="prof-lic-table">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">License Name / SKU</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Assigned Date</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Monthly Cost</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Remove Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="prof-lic-body" class="bg-white divide-y divide-slate-100 text-sm">
+                                        </tbody>
+                                </table>
+                                <div id="prof-unlicensed-msg" class="hidden text-center py-12">
+                                    <p class="text-slate-400 font-medium text-lg">This identity currently holds no licenses.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        if (typeof dashboardData === 'undefined') {
+            document.body.innerHTML = `<div class="p-10 text-center text-red-600 font-bold text-2xl mt-20 shadow-lg bg-white rounded-xl mx-auto max-w-2xl border border-red-200">System Failure: data.js is missing or corrupted.</div>`;
+        } else {
+            // === GLOBALS & COMPLEX STATE ===
+            let currentData = dashboardData;
+            let licenseChartInstance = null;
+            let deptChartInstance = null;
+            const MAX_TABLE_ROWS = 100;
+
+            // Deep State Tracker
+            let activeState = {
+                company: "ALL",
+                region: "ALL",
+                dept: "ALL",
+                license: "ALL",
+                search: "",
+                kpiBox: "ALL" // Tracks clicks on the dashboard KPI cards
+            };
+
+            // Calculate Universal License Metrics Once
+            const globalLicenses = {};
+            dashboardData.forEach(u => {
+                if(u.Licenses !== "Unlicensed") {
+                    u.Licenses.split(', ').forEach(lic => {
+                        globalLicenses[lic] = (globalLicenses[lic] || 0) + 1;
+                    });
+                }
+            });
+
+            // === INITIALIZATION ===
+            document.getElementById('sidebar-count').innerText = dashboardData.length.toLocaleString();
+            populateUniversalDropdowns();
+            renderLicenseDirectory();
+            evaluateFilters();
+
+            // === NAVIGATION ENGINE ===
+            function switchView(viewName) {
+                // Hide All
+                ['view-dashboard', 'view-directory', 'view-profile', 'view-licenses'].forEach(v => {
+                    document.getElementById(v).classList.add('hidden');
+                });
+                
+                // Reset Nav Styles
+                ['nav-dashboard', 'nav-directory', 'nav-licenses'].forEach(n => {
+                    document.getElementById(n).className = "w-full flex items-center px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition font-medium text-sm";
+                });
+
+                // Show Target
+                if (viewName === 'dashboard') {
+                    document.getElementById('view-dashboard').classList.remove('hidden');
+                    document.getElementById('nav-dashboard').className = "w-full flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg shadow-md transition font-medium text-sm";
+                    document.getElementById('view-title').innerText = "Intelligence Overview";
+                } else if (viewName === 'directory') {
+                    document.getElementById('view-directory').classList.remove('hidden');
+                    document.getElementById('nav-directory').className = "w-full flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg shadow-md transition font-medium text-sm";
+                    document.getElementById('view-title').innerText = "Global User Directory";
+                    renderDirectoryTable(currentData);
+                } else if (viewName === 'licenses') {
+                    document.getElementById('view-licenses').classList.remove('hidden');
+                    document.getElementById('nav-licenses').className = "w-full flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg shadow-md transition font-medium text-sm";
+                    document.getElementById('view-title').innerText = "License Inventory";
+                } else if (viewName === 'profile') {
+                    document.getElementById('view-profile').classList.remove('hidden');
+                    document.getElementById('view-title').innerText = "Identity & Access Profile";
+                }
+            }
+
+            // === DEEP FILTER ENGINE ===
+            function populateUniversalDropdowns() {
+                const companies = new Set(), regions = new Set(), depts = new Set();
+                
+                dashboardData.forEach(user => {
+                    if (user.Company !== "N/A") companies.add(user.Company);
+                    if (user.Region !== "N/A") regions.add(user.Region);
+                    if (user.Department !== "N/A") depts.add(user.Department);
+                });
+
+                const appendOptions = (setId, dataSet) => {
+                    const el = document.getElementById(setId);
+                    Array.from(dataSet).sort().forEach(item => el.innerHTML += `<option value="${item}">${item}</option>`);
+                };
+
+                appendOptions('filterCompany', companies);
+                appendOptions('filterRegion', regions);
+                appendOptions('filterDept', depts);
+                appendOptions('filterLicense', Object.keys(globalLicenses)); // All found licenses
+            }
+
+            function setKpiFilter(type) {
+                activeState.kpiBox = type;
+                evaluateFilters();
+                // Visual feedback on the cards
+                document.getElementById('resetFiltersBtn').classList.remove('hidden');
+            }
+
+            function jumpToLicense(licenseName) {
+                document.getElementById('filterLicense').value = licenseName;
+                evaluateFilters();
+                switchView('directory');
+            }
+
+            function resetFilters() {
+                activeState = { company: "ALL", region: "ALL", dept: "ALL", license: "ALL", search: "", kpiBox: "ALL" };
+                document.getElementById('filterCompany').value = "ALL";
+                document.getElementById('filterRegion').value = "ALL";
+                document.getElementById('filterDept').value = "ALL";
+                document.getElementById('filterLicense').value = "ALL";
+                document.getElementById('searchInput').value = "";
+                document.getElementById('resetFiltersBtn').classList.add('hidden');
+                evaluateFilters();
+            }
+
+            function evaluateFilters() {
+                // Read dropdowns & search
+                activeState.company = document.getElementById('filterCompany').value;
+                activeState.region = document.getElementById('filterRegion').value;
+                activeState.dept = document.getElementById('filterDept').value;
+                activeState.license = document.getElementById('filterLicense').value;
+                activeState.search = document.getElementById('searchInput').value.toLowerCase();
+
+                // Show/Hide Reset Button
+                if(Object.values(activeState).some(val => val !== "ALL" && val !== "")) {
+                    document.getElementById('resetFiltersBtn').classList.remove('hidden');
+                } else {
+                    document.getElementById('resetFiltersBtn').classList.add('hidden');
+                }
+
+                // The massive filter pipeline
+                currentData = dashboardData.filter(user => {
+                    // Dropdowns
+                    if (activeState.company !== "ALL" && user.Company !== activeState.company) return false;
+                    if (activeState.region !== "ALL" && user.Region !== activeState.region) return false;
+                    if (activeState.dept !== "ALL" && user.Department !== activeState.dept) return false;
+                    if (activeState.license !== "ALL" && !user.Licenses.includes(activeState.license)) return false;
+                    
+                    // KPI Box Clicks
+                    if (activeState.kpiBox === "LICENSED" && user.Licenses === "Unlicensed") return false;
+                    if (activeState.kpiBox === "UNLICENSED" && user.Licenses !== "Unlicensed") return false;
+
+                    // Deep Search
+                    if (activeState.search !== "") {
+                        const matchSearch = user.DisplayName.toLowerCase().includes(activeState.search) ||
+                                            user.UPN.toLowerCase().includes(activeState.search) ||
+                                            user.CostCenter.toLowerCase().includes(activeState.search) ||
+                                            user.Licenses.toLowerCase().includes(activeState.search);
+                        if(!matchSearch) return false;
+                    }
+                    
+                    return true;
+                });
+
+                updateDashboardKPIs();
+                if (!document.getElementById('view-directory').classList.contains('hidden')) {
+                    renderDirectoryTable(currentData);
+                }
+            }
+
+            // Bind Event Listeners
+            ['filterCompany', 'filterRegion', 'filterDept', 'filterLicense', 'searchInput'].forEach(id => {
+                document.getElementById(id).addEventListener(id === 'searchInput' ? 'input' : 'change', evaluateFilters);
+            });
+
+
+            // === UPDATE DASHBOARD (KPIs & CHARTS) ===
+            function updateDashboardKPIs() {
+                document.getElementById('kpi-total').innerText = currentData.length.toLocaleString();
+                const licensedUsers = currentData.filter(u => u.Licenses !== "Unlicensed").length;
+                document.getElementById('kpi-licensed').innerText = licensedUsers.toLocaleString();
+                document.getElementById('kpi-unlicensed').innerText = (currentData.length - licensedUsers).toLocaleString();
+                document.getElementById('kpi-depts').innerText = new Set(currentData.map(u => u.Department)).size.toLocaleString();
+
+                const licenseCounts = {}, deptCounts = {};
+
+                currentData.forEach(user => {
+                    if(user.Department !== "N/A") deptCounts[user.Department] = (deptCounts[user.Department] || 0) + 1;
+                    if(user.Licenses !== "Unlicensed") {
+                        user.Licenses.split(', ').forEach(lic => {
+                            if(!lic.startsWith("SKU:")) licenseCounts[lic] = (licenseCounts[lic] || 0) + 1;
+                        });
+                    }
+                });
+
+                drawPieChart(licenseCounts);
+                drawBarChart(deptCounts);
+            }
+
+            function drawPieChart(counts) {
+                const ctx = document.getElementById('licensePieChart').getContext('2d');
+                if (licenseChartInstance) licenseChartInstance.destroy();
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+                licenseChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: sorted.map(i => i[0]),
+                        datasets: [{
+                            data: sorted.map(i => i[1]),
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316', '#6366f1'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' } } }
+                });
+            }
+
+            function drawBarChart(counts) {
+                const ctx = document.getElementById('deptBarChart').getContext('2d');
+                if (deptChartInstance) deptChartInstance.destroy();
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+                deptChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: sorted.map(i => i[0].substring(0, 15)),
+                        datasets: [{
+                            label: 'Assigned Headcount',
+                            data: sorted.map(i => i[1]),
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            // === LICENSE DIRECTORY ENGINE ===
+            function renderLicenseDirectory() {
+                const grid = document.getElementById('licenseGrid');
+                const sortedLicenses = Object.entries(globalLicenses).sort((a, b) => b[1] - a[1]);
+
+                grid.innerHTML = sortedLicenses.map(item => {
+                    const isSku = item[0].startsWith("SKU:");
+                    const title = isSku ? "Unknown License Object" : item[0];
+                    const subtitle = isSku ? item[0] : "Verified Corporate License";
+                    const bgClass = isSku ? "bg-slate-100 border-slate-200" : "bg-white border-blue-100";
+                    const badgeClass = isSku ? "bg-slate-200 text-slate-600" : "bg-blue-100 text-blue-700";
+
+                    return `
+                    <div class="${bgClass} rounded-xl shadow-sm border p-6 flex flex-col justify-between hover:shadow-lg transition group">
+                        <div>
+                            <span class="${badgeClass} text-xs font-black uppercase tracking-widest px-2 py-1 rounded">Volume: ${item[1].toLocaleString()}</span>
+                            <h3 class="text-xl font-bold text-slate-800 mt-4">${title}</h3>
+                            <p class="text-xs text-slate-400 font-mono mt-1 break-all">${subtitle}</p>
+                        </div>
+                        <button onclick="jumpToLicense('${item[0]}')" class="mt-6 w-full py-2 bg-slate-900 text-white rounded-lg font-semibold shadow hover:bg-blue-600 transition">
+                            View Assigned Users &rarr;
+                        </button>
+                    </div>`;
+                }).join('');
+            }
+
+            // === USER DIRECTORY TABLE ===
+            function renderDirectoryTable(data) {
+                const tbody = document.getElementById('tableBody');
+                document.getElementById('searchStats').innerText = `${Math.min(data.length, MAX_TABLE_ROWS)} of ${data.length} visible`;
+
+                tbody.innerHTML = data.slice(0, MAX_TABLE_ROWS).map((user, index) => `
+                    <tr class="hover:bg-blue-50 transition cursor-pointer group" onclick="viewProfile(${dashboardData.indexOf(user)})">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-slate-800">${user.DisplayName}</div>
+                            <div class="text-sm text-slate-500 font-medium">${user.UPN}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-semibold text-slate-700">${user.Department}</div>
+                            <div class="text-xs text-slate-400 uppercase tracking-wider">${user.Company}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-slate-700">${user.Region}</div>
+                            <div class="text-xs font-mono text-slate-400">CC: ${user.CostCenter}</div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="text-blue-600 group-hover:text-blue-800 font-bold text-sm bg-blue-50 px-3 py-1 rounded-full group-hover:bg-blue-100 transition">Open Profile</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // === PROFESSIONAL USER PROFILE ===
+            window.viewProfile = function(index) {
+                const user = dashboardData[index];
+                
+                // Left Column Data
+                document.getElementById('prof-name').innerText = user.DisplayName;
+                document.getElementById('prof-upn').innerText = user.UPN;
+                document.getElementById('prof-company').innerText = user.Company;
+                document.getElementById('prof-dept').innerText = user.Department;
+                document.getElementById('prof-region').innerText = user.Region;
+                document.getElementById('prof-cost').innerText = user.CostCenter;
+                document.getElementById('prof-initials').innerText = user.DisplayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "?";
+
+                // Right Column Data (Financial Tracking Table)
+                const table = document.getElementById('prof-lic-table');
+                const tBody = document.getElementById('prof-lic-body');
+                const noMsg = document.getElementById('prof-unlicensed-msg');
+                const countBadge = document.getElementById('prof-lic-count');
+
+                if (user.Licenses === "Unlicensed") {
+                    table.classList.add('hidden');
+                    noMsg.classList.remove('hidden');
+                    countBadge.innerText = "Unlicensed";
+                    countBadge.className = "bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-sm font-bold shadow-sm";
+                } else {
+                    table.classList.remove('hidden');
+                    noMsg.classList.add('hidden');
+                    
+                    const licensesArray = user.Licenses.split(', ');
+                    countBadge.innerText = `${licensesArray.length} Active`;
+                    countBadge.className = "bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm";
+
+                    // Build the table rows with the requested empty fields
+                    tBody.innerHTML = licensesArray.map(lic => {
+                        const isSku = lic.startsWith("SKU:");
+                        const styleClass = isSku ? "text-slate-500 font-mono text-xs" : "font-semibold text-slate-800";
+                        
+                        return `
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 ${styleClass} border-b border-slate-100">${lic}</td>
+                            <td class="px-4 py-3 text-slate-400 italic border-b border-slate-100 text-center">-</td>
+                            <td class="px-4 py-3 text-slate-400 italic border-b border-slate-100 text-center">-</td>
+                            <td class="px-4 py-3 text-slate-400 italic border-b border-slate-100 text-center">-</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                switchView('profile');
+            };
+        }
+    </script>
+</body>
+</html>
