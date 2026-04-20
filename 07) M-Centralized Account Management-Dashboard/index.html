@@ -57,8 +57,8 @@
                 <select id="filterCompany" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
                     <option value="ALL">🏢 All Companies</option>
                 </select>
-                <select id="filterRegion" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
-                    <option value="ALL">🌍 All Regions</option>
+                <select id="filterManager" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
+                    <option value="ALL">👤 All Managers</option>
                 </select>
                 <select id="filterDept" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium">
                     <option value="ALL">📁 All Departments</option>
@@ -119,7 +119,7 @@
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Identity</th>
                                 <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Organization</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Location</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Manager</th>
                                 <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
@@ -165,8 +165,8 @@
                                             <span class="font-semibold text-slate-800 bg-slate-100 px-3 py-1 rounded-md" id="prof-dept">IT</span>
                                         </div>
                                         <div class="flex items-center text-sm">
-                                            <span class="w-24 text-slate-400 font-bold uppercase tracking-wider text-xs">Region</span>
-                                            <span class="font-semibold text-slate-800" id="prof-region">CA</span>
+                                            <span class="w-24 text-slate-400 font-bold uppercase tracking-wider text-xs">Manager</span>
+                                            <span class="font-semibold text-slate-800" id="prof-manager">CA</span>
                                         </div>
                                         <div class="flex items-center text-sm">
                                             <span class="w-24 text-slate-400 font-bold uppercase tracking-wider text-xs">Cost Center</span>
@@ -225,7 +225,7 @@
             // Deep State Tracker
             let activeState = {
                 company: "ALL",
-                region: "ALL",
+                manager: "ALL",
                 dept: "ALL",
                 license: "ALL",
                 search: "",
@@ -282,11 +282,11 @@
 
             // === DEEP FILTER ENGINE ===
             function populateUniversalDropdowns() {
-                const companies = new Set(), regions = new Set(), depts = new Set();
+                const companies = new Set(), managers = new Set(), depts = new Set();
                 
                 dashboardData.forEach(user => {
                     if (user.Company !== "N/A") companies.add(user.Company);
-                    if (user.Region !== "N/A") regions.add(user.Region);
+                    if (user.Manager && user.Manager !== "N/A") managers.add(user.Manager);
                     if (user.Department !== "N/A") depts.add(user.Department);
                 });
 
@@ -296,7 +296,7 @@
                 };
 
                 appendOptions('filterCompany', companies);
-                appendOptions('filterRegion', regions);
+                appendOptions('filterManager', managers);
                 appendOptions('filterDept', depts);
                 appendOptions('filterLicense', Object.keys(globalLicenses)); // All found licenses
             }
@@ -315,9 +315,9 @@
             }
 
             function resetFilters() {
-                activeState = { company: "ALL", region: "ALL", dept: "ALL", license: "ALL", search: "", kpiBox: "ALL" };
+                activeState = { company: "ALL", manager: "ALL", dept: "ALL", license: "ALL", search: "", kpiBox: "ALL" };
                 document.getElementById('filterCompany').value = "ALL";
-                document.getElementById('filterRegion').value = "ALL";
+                document.getElementById('filterManager').value = "ALL";
                 document.getElementById('filterDept').value = "ALL";
                 document.getElementById('filterLicense').value = "ALL";
                 document.getElementById('searchInput').value = "";
@@ -328,7 +328,7 @@
             function evaluateFilters() {
                 // Read dropdowns & search
                 activeState.company = document.getElementById('filterCompany').value;
-                activeState.region = document.getElementById('filterRegion').value;
+                activeState.manager = document.getElementById('filterManager').value;
                 activeState.dept = document.getElementById('filterDept').value;
                 activeState.license = document.getElementById('filterLicense').value;
                 activeState.search = document.getElementById('searchInput').value.toLowerCase();
@@ -344,7 +344,7 @@
                 currentData = dashboardData.filter(user => {
                     // Dropdowns
                     if (activeState.company !== "ALL" && user.Company !== activeState.company) return false;
-                    if (activeState.region !== "ALL" && user.Region !== activeState.region) return false;
+                    if (activeState.manager !== "ALL" && user.Manager !== activeState.manager) return false;
                     if (activeState.dept !== "ALL" && user.Department !== activeState.dept) return false;
                     if (activeState.license !== "ALL" && !user.Licenses.includes(activeState.license)) return false;
                     
@@ -371,7 +371,7 @@
             }
 
             // Bind Event Listeners
-            ['filterCompany', 'filterRegion', 'filterDept', 'filterLicense', 'searchInput'].forEach(id => {
+            ['filterCompany', 'filterManager', 'filterDept', 'filterLicense', 'searchInput'].forEach(id => {
                 document.getElementById(id).addEventListener(id === 'searchInput' ? 'input' : 'change', evaluateFilters);
             });
 
@@ -478,7 +478,7 @@
                             <div class="text-xs text-slate-400 uppercase tracking-wider">${user.Company}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-slate-700">${user.Region}</div>
+                            <div class="text-sm text-slate-700">${user.Manager || 'N/A'}</div>
                             <div class="text-xs font-mono text-slate-400">CC: ${user.CostCenter}</div>
                         </td>
                         <td class="px-6 py-4 text-right">
@@ -497,7 +497,7 @@
                 document.getElementById('prof-upn').innerText = user.UPN;
                 document.getElementById('prof-company').innerText = user.Company;
                 document.getElementById('prof-dept').innerText = user.Department;
-                document.getElementById('prof-region').innerText = user.Region;
+                document.getElementById('prof-manager').innerText = user.Manager || 'N/A';
                 document.getElementById('prof-cost').innerText = user.CostCenter;
                 document.getElementById('prof-initials').innerText = user.DisplayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "?";
 

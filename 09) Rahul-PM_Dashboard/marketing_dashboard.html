@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Campaign Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for reading Excel directly in the browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Custom scrollbar for a sleeker look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans flex h-screen overflow-hidden text-slate-800">
+
+    <aside class="w-64 bg-black text-white flex flex-col shadow-2xl z-20 shrink-0 border-r border-[#1a1a1a]">
+        <div class="p-8 text-center border-b border-[#1a1a1a] flex flex-col items-center justify-center">
+            <img src="https://media.licdn.com/dms/image/v2/D4D0BAQGI3gL7aLQE9w/company-logo_200_200/B4DZlMVwT.HsAI-/0/1757922396010/ebikego_group_logo?e=1778112000&v=beta&t=QsWAWFDJStAiELh6QyhktNP9Njl0q5iyg2n2IDEyJoU" alt="EBG Logo" class="w-20 object-contain mb-4" />
+            <p class="text-[10px] text-slate-400 uppercase tracking-[0.25em] font-bold">Universal Dashboard</p>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="w-full flex items-center px-4 py-3 bg-[#222] text-white rounded-lg transition font-medium text-sm shadow-md">
+                <svg class="w-5 h-5 mr-3 opacity-80 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Overview
+            </button>
+            <button onclick="switchView('directory')" id="nav-directory" class="w-full flex items-center px-4 py-3 text-slate-400 hover:bg-[#111] hover:text-white rounded-lg transition font-medium text-sm">
+                <svg class="w-5 h-5 mr-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Campaign Details
+            </button>
+        </nav>
+        <div class="p-4 bg-[#050505] text-xs text-slate-500 text-center border-t border-[#1a1a1a]">
+            Active Campaigns: <span id="sidebar-count" class="font-bold text-slate-300">0</span>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="bg-white shadow-sm border-b border-slate-200 z-10 p-4 shrink-0">
+            <div class="flex justify-between items-center mb-3">
+                <h2 id="view-title" class="text-2xl font-bold text-slate-800 tracking-tight">Campaign Overview</h2>
+                <button onclick="resetFilters()" class="text-sm text-red-600 hover:text-red-800 font-semibold px-3 py-1 rounded-md hover:bg-red-50 transition hidden" id="resetFiltersBtn">
+                    Clear Filters ✕
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                <select id="filterDelivery" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium">
+                    <option value="ALL">🟢 All Status</option>
+                </select>
+                <select id="filterCampaign" class="border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium">
+                    <option value="ALL">🎯 All Campaigns</option>
+                </select>
+                <div class="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-1 bg-slate-50 relative pointer-events-auto">
+                    <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider shrink-0 w-8">From</span>
+                    <input type="date" id="filterDateFrom" class="w-full bg-transparent text-slate-700 focus:outline-none font-medium text-xs">
+                </div>
+                <div class="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-1 bg-slate-50 relative pointer-events-auto">
+                    <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider shrink-0 w-8">To</span>
+                    <input type="date" id="filterDateTo" class="w-full bg-transparent text-slate-700 focus:outline-none font-medium text-xs">
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 overflow-y-auto flex-1 bg-slate-50">
+            
+            <div id="view-dashboard" class="space-y-8 fade-in block">
+                <!-- KPI CARDS -->
+                <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <div class="bg-white flex flex-col justify-between rounded-xl shadow-sm p-4 xl:p-5 border-l-4 border-indigo-500 transition group hover:shadow-md min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-indigo-500 transition truncate mb-1" title="Amount Spent (INR)">Amount Spent</p>
+                        <p class="text-xl lg:text-lg xl:text-xl font-black text-slate-800 truncate" id="kpi-spend">₹0</p>
+                    </div>
+                    <div class="bg-white flex flex-col justify-between rounded-xl shadow-sm p-4 xl:p-5 border-l-4 border-blue-500 transition group hover:shadow-md min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-blue-500 transition truncate mb-1" title="Total Impressions">Impressions</p>
+                        <p class="text-xl lg:text-lg xl:text-xl font-black text-slate-800 truncate" id="kpi-impressions">0</p>
+                    </div>
+                    <div class="bg-white flex flex-col justify-between rounded-xl shadow-sm p-4 xl:p-5 border-l-4 border-emerald-500 transition group hover:shadow-md min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-emerald-500 transition truncate mb-1" title="Total Link Clicks">Link Clicks</p>
+                        <p class="text-xl lg:text-lg xl:text-xl font-black text-slate-800 truncate" id="kpi-clicks">0</p>
+                    </div>
+                    <div class="bg-white flex flex-col justify-between rounded-xl shadow-sm p-4 xl:p-5 border-l-4 border-amber-500 transition group hover:shadow-md min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-amber-500 transition truncate mb-1" title="Avg. CPC (INR)">Avg. CPC</p>
+                        <p class="text-xl lg:text-lg xl:text-xl font-black text-slate-800 truncate" id="kpi-cpc">₹0</p>
+                    </div>
+                    <div class="bg-white flex flex-col justify-between rounded-xl shadow-sm p-4 xl:p-5 border-l-4 border-teal-500 transition group hover:shadow-md min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-teal-500 transition truncate mb-1" title="Total Results">Total Results</p>
+                        <p class="text-xl lg:text-lg xl:text-xl font-black text-slate-800 truncate" id="kpi-results">0</p>
+                    </div>
+                    <div class="bg-white flex flex-col justify-between rounded-xl shadow-sm p-4 xl:p-5 border-l-4 border-rose-500 transition group hover:shadow-md min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-rose-500 transition truncate mb-1" title="Avg. Cost / Result">Cost / Result</p>
+                        <p class="text-xl lg:text-lg xl:text-xl font-black text-slate-800 truncate" id="kpi-cpr">₹0</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border-2 border-slate-200 border-dashed flex items-center justify-center min-h-[350px] transition hover:border-indigo-300">
+                        <p class="text-slate-400 font-bold text-sm tracking-wider uppercase text-center"><span class="block mb-2 text-2xl">✨</span>Reserved For Future Data</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Spend Distribution</h3>
+                        <div class="relative h-72"><canvas id="spendPieChart"></canvas></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200 xl:col-span-2">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                            <h3 class="text-lg font-bold text-slate-800">Leads & CPR Over Time</h3>
+                            <div class="flex bg-slate-100 p-1 rounded-lg">
+                                <button onclick="setTimelineInterval('day')" id="btn-interval-day" class="px-3 py-1 text-xs font-bold rounded-md transition-colors text-slate-500 hover:text-indigo-600">DoD</button>
+                                <button onclick="setTimelineInterval('week')" id="btn-interval-week" class="px-3 py-1 text-xs font-bold rounded-md transition-colors text-slate-500 hover:text-indigo-600">WoW</button>
+                                <button onclick="setTimelineInterval('month')" id="btn-interval-month" class="px-3 py-1 text-xs font-bold rounded-md transition-colors bg-white text-indigo-600 shadow-sm">MoM</button>
+                                <button onclick="setTimelineInterval('year')" id="btn-interval-year" class="px-3 py-1 text-xs font-bold rounded-md transition-colors text-slate-500 hover:text-indigo-600">YoY</button>
+                            </div>
+                        </div>
+                        <div class="relative h-72"><canvas id="timelineChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-directory" class="hidden space-y-6 fade-in">
+                <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 flex justify-between items-center sticky top-0 z-10">
+                    <div class="w-full md:w-1/2 relative">
+                        <svg class="w-5 h-5 absolute left-3 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" id="searchInput" placeholder="Search campaigns by name..." 
+                            class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 font-medium text-slate-700 transition">
+                    </div>
+                    <div class="hidden md:block text-sm font-semibold text-slate-500 bg-slate-100 px-4 py-2 rounded-lg" id="searchStats"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Campaign Name</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Spend (INR)</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Impressions / Reach</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Clicks</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">CTR / CPC</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="bg-white divide-y divide-slate-100">
+                            </tbody>
+                    </table>
+                    <div id="pagination-controls" class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-sm font-medium text-slate-600 hidden">
+                        <button id="btnPrevPage" onclick="changePage(-1)" class="px-4 py-2 bg-white border border-slate-300 rounded-md hover:bg-slate-100 disabled:opacity-50 transition">Previous</button>
+                        <span id="page-indicator">Page 1 of 1</span>
+                        <button id="btnNextPage" onclick="changePage(1)" class="px-4 py-2 bg-white border border-slate-300 rounded-md hover:bg-slate-100 disabled:opacity-50 transition">Next</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let dashboardData = [];
+        let currentData = [];
+        let costChartInstance = null;
+        let pieChartInstance = null;
+        let currentPage = 1;
+        const itemsPerPage = 50;
+
+        let activeState = {
+            delivery: "ALL",
+            campaign: "ALL",
+            search: "",
+            interval: "month",
+            dateFrom: "",
+            dateTo: ""
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('filterDateFrom').max = today;
+            document.getElementById('filterDateTo').max = today;
+        });
+
+        function setTimelineInterval(inv) {
+            activeState.interval = inv;
+            ['day', 'week', 'month', 'year'].forEach(type => {
+                const btn = document.getElementById('btn-interval-' + type);
+                if (type === inv) {
+                    btn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                    btn.classList.remove('text-slate-500', 'hover:text-indigo-600');
+                } else {
+                    btn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+                    btn.classList.add('text-slate-500', 'hover:text-indigo-600');
+                }
+            });
+            evaluateFilters(); // Re-trigger filtering and redraw
+        }
+
+        function getFormattedDateString(dateObj, interval) {
+            if(interval === 'day') {
+                return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            } else if (interval === 'week') {
+                const d = new Date(dateObj);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6:1);
+                d.setDate(diff);
+                return 'Week of ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            } else if (interval === 'month') {
+                return dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            } else {
+                return dateObj.toLocaleDateString('en-US', { year: 'numeric' });
+            }
+        }
+
+        // Fetch Excel natively on load
+        async function initDashboard() {
+            try {
+                // Try to load via HTTP (Works in Live Servers)
+                const res = await fetch('meta_excel.xlsx');
+                if(!res.ok) throw new Error("HTTP Fetch Error");
+                const buffer = await res.arrayBuffer();
+                parseAndLoadExcel(buffer);
+            } catch(e) {
+                // Fallback: If blocked by file:// CORS, ask user to select it
+                document.body.insertAdjacentHTML('afterbegin', `
+                    <div id="file-overlay" class="absolute inset-0 bg-slate-900/95 z-50 flex items-center justify-center fade-in">
+                        <div class="bg-white p-10 rounded-2xl shadow-2xl max-w-lg text-center border-t-4 border-indigo-500">
+                            <h2 class="text-2xl font-black text-slate-800 mb-2">Browser Security Check</h2>
+                            <p class="text-slate-500 mb-6 font-medium text-sm">Browsers prevent automatic reading of local files. Please select <b>meta_excel.xlsx</b> below to load your dashboard.</p>
+                            <input type="file" id="manualFile" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition cursor-pointer border border-slate-200 rounded-xl"/>
+                        </div>
+                    </div>
+                `);
+
+                document.getElementById('manualFile').addEventListener('change', (e) => {
+                    if(!e.target.files.length) return;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        document.getElementById('file-overlay').remove();
+                        parseAndLoadExcel(evt.target.result);
+                    };
+                    reader.readAsArrayBuffer(e.target.files[0]);
+                });
+            }
+        }
+
+        function parseAndLoadExcel(buffer) {
+            const workbook = XLSX.read(buffer, {type: "array"});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            // defval: 0 automatically fills any empty cells with 0!
+            dashboardData = XLSX.utils.sheet_to_json(sheet, {defval: 0});
+            currentData = dashboardData;
+            
+            document.getElementById('sidebar-count').innerText = dashboardData.length.toLocaleString();
+            populateDropdowns();
+            evaluateFilters();
+        }
+
+        initDashboard();
+
+        function switchView(viewName) {
+                ['view-dashboard', 'view-directory'].forEach(v => {
+                    document.getElementById(v).classList.add('hidden');
+                });
+                ['nav-dashboard', 'nav-directory'].forEach(n => {
+                    document.getElementById(n).className = "w-full flex items-center px-4 py-3 text-slate-400 hover:bg-[#111] hover:text-white rounded-lg transition font-medium text-sm";
+                });
+
+                if (viewName === 'dashboard') {
+                    document.getElementById('view-dashboard').classList.remove('hidden');
+                    document.getElementById('nav-dashboard').className = "w-full flex items-center px-4 py-3 bg-[#222] text-white rounded-lg shadow-md transition font-medium text-sm";
+                    document.getElementById('view-title').innerText = "Campaign Overview";
+                } else if (viewName === 'directory') {
+                    document.getElementById('view-directory').classList.remove('hidden');
+                    document.getElementById('nav-directory').className = "w-full flex items-center px-4 py-3 bg-[#222] text-white rounded-lg shadow-md transition font-medium text-sm";
+                    document.getElementById('view-title').innerText = "Campaign Details";
+                    renderTable(currentData);
+                }
+            }
+
+            function populateDropdowns() {
+                const deliveryStatus = new Set(), campaigns = new Set();
+                
+                dashboardData.forEach(item => {
+                    if (item['Campaign delivery']) deliveryStatus.add(item['Campaign delivery']);
+                    if (item['Campaign name']) campaigns.add(item['Campaign name']);
+                });
+
+                const appendOptions = (setId, dataSet) => {
+                    const el = document.getElementById(setId);
+                    Array.from(dataSet).sort().forEach(item => el.innerHTML += `<option value="${item}">${item}</option>`);
+                };
+
+                appendOptions('filterDelivery', deliveryStatus);
+                appendOptions('filterCampaign', campaigns);
+            }
+
+            function resetFilters() {
+                activeState = { delivery: "ALL", campaign: "ALL", search: "", interval: activeState.interval, dateFrom: "", dateTo: "" };
+                document.getElementById('filterDelivery').value = "ALL";
+                document.getElementById('filterCampaign').value = "ALL";
+                document.getElementById('searchInput').value = "";
+                document.getElementById('filterDateFrom').value = "";
+                document.getElementById('filterDateTo').value = "";
+                document.getElementById('resetFiltersBtn').classList.add('hidden');
+                evaluateFilters();
+            }
+
+            function evaluateFilters() {
+                activeState.delivery = document.getElementById('filterDelivery').value;
+                activeState.campaign = document.getElementById('filterCampaign').value;
+                activeState.search = document.getElementById('searchInput').value.toLowerCase();
+                activeState.dateFrom = document.getElementById('filterDateFrom').value;
+                activeState.dateTo = document.getElementById('filterDateTo').value;
+
+                // Mutually exclusive bounds to stop invalid ranges
+                const todayStr = new Date().toISOString().split('T')[0];
+                document.getElementById('filterDateFrom').max = activeState.dateTo || todayStr;
+                document.getElementById('filterDateTo').min = activeState.dateFrom || "";
+                document.getElementById('filterDateTo').max = todayStr;
+
+                currentPage = 1; // reset pagination to 1 on filter
+
+                if (activeState.delivery !== "ALL" || activeState.campaign !== "ALL" || activeState.search !== "" || activeState.dateFrom !== "" || activeState.dateTo !== "") {
+                    document.getElementById('resetFiltersBtn').classList.remove('hidden');
+                } else {
+                    document.getElementById('resetFiltersBtn').classList.add('hidden');
+                }
+
+                let fromMs = activeState.dateFrom ? new Date(activeState.dateFrom).getTime() : -Infinity;
+                let toMs = activeState.dateTo ? new Date(activeState.dateTo).getTime() : Infinity;
+                if (toMs !== Infinity) toMs += (86400 * 1000) - 1; // Make 'To' date inclusive
+
+                currentData = dashboardData.filter(item => {
+                    if (activeState.delivery !== "ALL" && item['Campaign delivery'] !== activeState.delivery) return false;
+                    if (activeState.campaign !== "ALL" && item['Campaign name'] !== activeState.campaign) return false;
+                    
+                    if (activeState.search !== "") {
+                        const cName = item['Campaign name'] ? item['Campaign name'].toLowerCase() : "";
+                        if(!cName.includes(activeState.search)) return false;
+                    }
+                    
+                    if (activeState.dateFrom || activeState.dateTo) {
+                        const rawDate = item['Reporting starts'];
+                        if (rawDate !== undefined && rawDate !== null && rawDate !== "") {
+                            let dateObj = null;
+                            if (typeof rawDate === 'number') {
+                                dateObj = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+                            } else {
+                                dateObj = new Date(rawDate);
+                            }
+                            if (dateObj && !isNaN(dateObj.getTime()) && dateObj.getFullYear() > 2000) {
+                                const rowMs = dateObj.getTime();
+                                if (rowMs < fromMs || rowMs > toMs) return false;
+                            } else {
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                updateDashboardKPIs();
+                if (!document.getElementById('view-directory').classList.contains('hidden')) {
+                    renderTable(currentData);
+                }
+            }
+
+            ['filterDelivery', 'filterCampaign', 'searchInput', 'filterDateFrom', 'filterDateTo'].forEach(id => {
+                document.getElementById(id).addEventListener(id === 'searchInput' ? 'input' : 'change', evaluateFilters);
+            });
+
+            function updateDashboardKPIs() {
+                let totalSpend = 0, totalImpressions = 0, totalClicks = 0;
+                let cpcSum = 0, cpcCount = 0;
+                let totalResults = 0;
+
+                const campaignDataMap = {}; // For charts
+                const timelineDataMap = {}; // For timeline chart
+
+                currentData.forEach(item => {
+                    const spend = parseFloat(item['Amount spent (INR)']) || 0;
+                    const imp = parseInt(item['Impressions']) || 0;
+                    const clicks = parseInt(item['Link clicks']) || 0;
+                    const cpc = parseFloat(item['CPC (cost per link click) (INR)']) || 0;
+                    const results = parseFloat(item['Results']) || 0;
+
+                    totalSpend += spend;
+                    totalImpressions += imp;
+                    totalClicks += clicks;
+                    totalResults += results;
+                    
+                    if(cpc > 0) { cpcSum += cpc; cpcCount++; }
+
+                    // Aggregate chart data by Campaign Name
+                    const name = item['Campaign name'] || "Unknown";
+                    if(!campaignDataMap[name]) campaignDataMap[name] = { spend: 0, results: 0 };
+                    campaignDataMap[name].spend += spend;
+                    campaignDataMap[name].results += results;
+
+                    // Aggregate for Timeline
+                    const rawDate = item['Reporting starts'];
+                    if (rawDate !== undefined && rawDate !== null && rawDate !== "") {
+                        let dateObj = null;
+                        if (typeof rawDate === 'number') {
+                            dateObj = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+                        } else {
+                            dateObj = new Date(rawDate);
+                        }
+                        
+                        // Ignore invalid and 1970 bug dates
+                        if (dateObj && !isNaN(dateObj.getTime()) && dateObj.getFullYear() > 2000) {
+                            const timeKey = getFormattedDateString(dateObj, activeState.interval);
+                            if(!timelineDataMap[timeKey]) {
+                                timelineDataMap[timeKey] = { results: 0, spend: 0, sortKey: dateObj.getTime() };
+                            }
+                            timelineDataMap[timeKey].results += results;
+                            timelineDataMap[timeKey].spend += spend;
+                        }
+                    }
+                });
+
+                const spendStr = '₹' + totalSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('kpi-spend').innerText = spendStr;
+                document.getElementById('kpi-spend').parentElement.title = spendStr;
+
+                const impStr = totalImpressions.toLocaleString();
+                document.getElementById('kpi-impressions').innerText = impStr;
+                document.getElementById('kpi-impressions').parentElement.title = impStr;
+
+                const clickStr = totalClicks.toLocaleString();
+                document.getElementById('kpi-clicks').innerText = clickStr;
+                document.getElementById('kpi-clicks').parentElement.title = clickStr;
+                
+                const avgCpc = cpcCount > 0 ? (cpcSum / cpcCount) : 0;
+                const cpcStr = '₹' + avgCpc.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('kpi-cpc').innerText = cpcStr;
+                document.getElementById('kpi-cpc').parentElement.title = cpcStr;
+                
+                const resStr = totalResults.toLocaleString(undefined, {maximumFractionDigits: 2});
+                document.getElementById('kpi-results').innerText = resStr;
+                document.getElementById('kpi-results').parentElement.title = resStr;
+                
+                const avgCpr = totalResults > 0 ? (totalSpend / totalResults) : 0;
+                const cprStr = '₹' + avgCpr.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('kpi-cpr').innerText = cprStr;
+                document.getElementById('kpi-cpr').parentElement.title = cprStr;
+
+                drawCharts(campaignDataMap, timelineDataMap);
+            }
+
+            function drawCharts(dataMap, timelineDataMap) {
+                const sortedNames = Object.keys(dataMap).sort((a,b) => dataMap[b].spend - dataMap[a].spend).slice(0, 10);
+                const spendData = sortedNames.map(name => dataMap[name].spend);
+                const shortNames = sortedNames.map(name => name.length > 20 ? name.substring(0, 20) + '...' : name);
+
+                const ctx2 = document.getElementById('spendPieChart').getContext('2d');
+                if (pieChartInstance) pieChartInstance.destroy();
+                pieChartInstance = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: shortNames,
+                        datasets: [{
+                            data: spendData,
+                            backgroundColor: ['#6366f1', '#3b82f6', '#14b8a6', '#10b981', '#f59e0b', '#f97316', '#ef4444', '#ec4899', '#8b5cf6', '#64748b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 10} } } } }
+                });
+
+                // --- TIMELINE CHART ---
+                const sortedKeys = Object.keys(timelineDataMap).sort((a,b) => timelineDataMap[a].sortKey - timelineDataMap[b].sortKey);
+                const timeResults = sortedKeys.map(k => timelineDataMap[k].results);
+                const timeCpr = sortedKeys.map(k => timelineDataMap[k].results > 0 ? (timelineDataMap[k].spend / timelineDataMap[k].results) : 0);
+
+                const ctx3 = document.getElementById('timelineChart').getContext('2d');
+                if (window.timelineChartInstance) window.timelineChartInstance.destroy();
+                window.timelineChartInstance = new Chart(ctx3, {
+                    type: 'line',
+                    data: {
+                        labels: sortedKeys,
+                        datasets: [
+                            {
+                                label: 'Avg. CPR (INR)',
+                                data: timeCpr,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.3,
+                                fill: false,
+                                yAxisID: 'y1'
+                            },
+                            {
+                                label: 'Leads Generated',
+                                data: timeResults,
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                yAxisID: 'y'
+                            }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'Leads Generated'} },
+                            y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: 'Cost Per Result (INR)'} }
+                        }
+                    }
+                });
+            }
+
+            function changePage(step) {
+                currentPage += step;
+                renderTable(currentData);
+            }
+
+            function renderTable(data) {
+                const tbody = document.getElementById('tableBody');
+                document.getElementById('searchStats').innerText = `${data.length} records`;
+
+                const totalPages = Math.ceil(data.length / itemsPerPage) || 1;
+                if(currentPage > totalPages) currentPage = totalPages;
+                if(currentPage < 1) currentPage = 1;
+
+                const paginationControls = document.getElementById('pagination-controls');
+                if (data.length > itemsPerPage) {
+                    paginationControls.classList.remove('hidden');
+                    document.getElementById('page-indicator').innerText = `Page ${currentPage} of ${totalPages}`;
+                    document.getElementById('btnPrevPage').disabled = currentPage === 1;
+                    document.getElementById('btnNextPage').disabled = currentPage === totalPages;
+                } else {
+                    paginationControls.classList.add('hidden');
+                }
+
+                const paginatedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+                tbody.innerHTML = paginatedData.map((item) => {
+                    const spend = parseFloat(item['Amount spent (INR)']) || 0;
+                    const cpc = parseFloat(item['CPC (cost per link click) (INR)']) || 0;
+                    const ctr = parseFloat(item['CTR (link click-through rate)']) || 0;
+                    const statusClass = item['Campaign delivery'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600';
+
+                    return `
+                    <tr class="hover:bg-indigo-50 transition border-b border-slate-50 last:border-0">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-slate-800 text-sm max-w-xs truncate" title="${item['Campaign name']}">${item['Campaign name'] || 'N/A'}</div>
+                            <div class="text-xs text-slate-400">${item['Reporting starts']} to ${item['Reporting ends']}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 flex w-max items-center rounded-md text-xs font-bold uppercase ${statusClass}">
+                                ${item['Campaign delivery'] || 'Unknown'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="text-sm font-black text-slate-700">₹${spend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="text-sm font-semibold text-slate-700">${(item['Impressions'] || 0).toLocaleString()} <span class="text-xs text-slate-400 font-normal">imp</span></div>
+                            <div class="text-xs text-slate-500">${(item['Reach'] || 0).toLocaleString()} reach</div>
+                        </td>
+                        <td class="px-6 py-4 text-right font-semibold text-slate-700">
+                            ${(item['Link clicks'] || 0).toLocaleString()}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="text-sm font-bold text-indigo-600">${ctr.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}% <span class="text-xs text-slate-400 font-normal">CTR</span></div>
+                            <div class="text-xs font-mono text-slate-500">₹${cpc.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span class="font-sans">CPC</span></div>
+                        </td>
+                    </tr>
+                `}).join('');
+            }
+    </script>
+</body>
+</html>
