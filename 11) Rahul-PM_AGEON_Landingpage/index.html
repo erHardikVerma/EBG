@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AGEON Franchise | LONGEVITY & RECOVERY</title>
+    <meta
+      name="description"
+      content="AGEON is India’s Smart-Aging & Longevity Platform. Explore a premium AGEON franchise opportunity built on protocol-led, science-backed longevity systems."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f7fdfc;
+        --bg-deep: #eff8f7;
+        --surface: #ffffff;
+        --surface-light: #f2fbf9;
+        --border: rgba(0, 168, 150, 0.18);
+        --text: #1e1e1e;
+        --muted: #505050;
+        --accent: #f8b128;
+        --accent-strong: #ffd07a;
+        --teal: #00a896;
+        --teal-deep: #0a3430;
+        --red-accent: #e1251d;
+        --btn-dark: #0a3430;
+        --success: #00a896;
+        --shadow: 0 18px 42px rgba(10, 52, 48, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Inter", system-ui, sans-serif;
+        background: radial-gradient(circle at top left, #eaf8f5, var(--bg));
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Montserrat", system-ui, sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin: 0 0 16px 0;
+      }
+
+      h1 {
+        font-size: clamp(2.6rem, 4vw, 3.6rem);
+      }
+
+      h2 {
+        font-size: clamp(2rem, 3vw, 2.8rem);
+      }
+
+      h3 {
+        font-size: clamp(1.4rem, 2.2vw, 1.8rem);
+      }
+
+      h4 {
+        font-size: 1.1rem;
+      }
+
+      p {
+        margin: 0 0 18px 0;
+        color: var(--muted);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .page {
+        position: relative;
+        min-height: 100vh;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 253, 252, 1));
+      }
+
+      .container {
+        width: min(1200px, 92%);
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(16px);
+        background: rgba(255, 255, 255, 0.92);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 18px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
+      }
+
+      .brand-name {
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        font-size: 1rem;
+        color: var(--teal-deep);
+      }
+
+      .brand-tag {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.18em;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 18px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .nav-links a:hover {
+        color: var(--teal);
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .topbar-link {
+        font-size: 0.9rem;
+        color: var(--teal);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 12px 22px;
+        font-weight: 500;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background: linear-gradient(140deg, var(--accent), var(--accent-strong));
+        color: #231602;
+        box-shadow: 0 14px 28px rgba(248, 177, 40, 0.28);
+      }
+
+      .btn-secondary {
+        border: 1px solid rgba(0, 168, 150, 0.4);
+        color: var(--teal-deep);
+        background: #fff;
+      }
+
+      .btn-ghost {
+        border: 1px solid var(--border);
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.85);
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .hero {
+        padding: 110px 0 90px;
+        background: radial-gradient(circle at 20% 20%, rgba(0, 168, 150, 0.12), transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(248, 177, 40, 0.15), transparent 45%),
+          url("./bg_light.png") right center / cover no-repeat;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 40px;
+        align-items: center;
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.35em;
+        font-size: 0.75rem;
+        color: var(--teal);
+        margin-bottom: 18px;
+      }
+
+      .subhead {
+        font-size: 1.05rem;
+        color: var(--muted);
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin: 24px 0 20px;
+      }
+
+      .trust-line {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .hero-panel {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .hero-visual-card {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid var(--border);
+        padding: 14px;
+        border-radius: 24px;
+        max-width: 460px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero-visual-image {
+        width: 100%;
+        min-height: 300px;
+        object-fit: cover;
+        border-radius: 16px;
+      }
+
+      .hero-visual-overlay {
+        position: absolute;
+        left: 26px;
+        right: 26px;
+        bottom: 24px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+
+      .hero-visual-overlay h3 {
+        color: var(--teal-deep);
+        margin-bottom: 8px;
+      }
+
+      .hero-visual-overlay p {
+        margin: 0;
+      }
+
+      .investment-grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .investment-card {
+        background: var(--surface-light);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px;
+      }
+
+      .investment-card.large {
+        padding: 28px;
+      }
+
+      .investment-amount {
+        font-size: 1.6rem;
+        font-weight: 600;
+      }
+
+      .investment-label {
+        color: var(--teal);
+        margin-bottom: 10px;
+      }
+
+      .section {
+        padding: 90px 0;
+      }
+
+      .section-heading {
+        max-width: 720px;
+        margin-bottom: 40px;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 32px;
+        align-items: start;
+      }
+
+      .surface {
+        background: var(--surface);
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+      }
+
+      .feature-grid,
+      .journey-grid,
+      .franchise-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 22px;
+      }
+
+      .feature-card,
+      .journey-card,
+      .franchise-card {
+        background: var(--surface);
+        padding: 22px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+      }
+
+      .journey-index {
+        color: var(--teal);
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .cta-band {
+        padding: 60px 0;
+        background: linear-gradient(135deg, rgba(0, 168, 150, 0.08), rgba(248, 177, 40, 0.14));
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .cta-band-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .cta-actions {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .stack-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        margin-top: 22px;
+      }
+
+      .clean-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      .clean-list li {
+        padding-left: 20px;
+        position: relative;
+        color: var(--muted);
+      }
+
+      .clean-list li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: var(--teal);
+      }
+
+      .note {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin-top: 16px;
+      }
+
+      .franchise-note {
+        margin-top: 20px;
+        color: var(--muted);
+      }
+
+      .investment-grid.full {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .placeholder-link {
+        margin-top: 24px;
+        display: flex;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .presence-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 20px;
+        margin-top: 18px;
+      }
+
+      .presence-badge {
+        background: rgba(113, 210, 181, 0.18);
+        color: var(--success);
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .city-tags {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+
+      .city-tags span {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 32px;
+        align-items: start;
+      }
+
+      .form-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .form-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      label {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      input,
+      select,
+      textarea {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        color: var(--text);
+        font-family: inherit;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: rgba(80, 80, 80, 0.5);
+      }
+
+      .form-note,
+      .form-disclaimer {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .final-cta {
+        padding: 90px 0 110px;
+        background: radial-gradient(circle at left, rgba(0, 168, 150, 0.1), transparent 60%);
+      }
+
+      .final-cta-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .footer {
+        padding: 40px 0 80px;
+        border-top: 1px solid var(--border);
+        background: var(--bg-deep);
+      }
+
+      .footer-inner {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links {
+        display: grid;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      @media (max-width: 980px) {
+        .nav-links {
+          display: none;
+        }
+
+        .topbar-actions {
+          display: none;
+        }
+
+        .hero {
+          padding-top: 90px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .topbar-inner {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .hero-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .section {
+          padding: 70px 0;
+        }
+      }
+    </style>
+    <link rel="icon" type="image/png" href="./Reference Files/Ageon-logo-removebg.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="./main.jsx"></script>
+  </body>
+</html>
